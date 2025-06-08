@@ -152,9 +152,9 @@ const ChoreTracker = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-pink-600 mb-2 flex items-center justify-center gap-2">
+        <h1 className="text-5xl font-bold text-pink-600 mb-2 flex items-center justify-center gap-2 font-kalam">
           <span>✨</span>
-          Kawaii Chore Tracker
+          Tessa's Chore Tracker
           <span>✨</span>
         </h1>
         <p className="text-lg text-purple-600 mb-4">Complete chores to earn diamonds!</p>
