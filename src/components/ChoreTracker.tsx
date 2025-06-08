@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Diamond } from 'lucide-react';
+import { Diamond, Brush } from 'lucide-react';
 import ChoreList from './ChoreList';
 import RewardsList from './RewardsList';
 
@@ -271,6 +272,11 @@ const ChoreTracker = () => {
           Tessa's Chore Tracker
           <span>✨</span>
         </h1>
+        
+        <div className="flex justify-center mb-4">
+          <Brush className="w-12 h-12 text-pink-500" />
+        </div>
+        
         <p className="text-lg text-purple-600 mb-4">Complete chores to earn diamonds!</p>
         
         <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-pink-200 inline-block">
