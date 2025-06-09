@@ -1,8 +1,9 @@
-
 import { useState } from 'react';
 import { Diamond, Brush } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ChoreList from './ChoreList';
 import RewardsList from './RewardsList';
+import DailyTally from './DailyTally';
 
 export interface Chore {
   id: string;
@@ -219,6 +220,7 @@ const ChoreTracker = () => {
   ]);
 
   const totalPoints = chores.reduce((sum, chore) => sum + chore.totalPoints, 0);
+  const todayPoints = chores.reduce((sum, chore) => sum + chore.todayPoints, 0);
 
   const completeChore = (choreId: string) => {
     setChores(prevChores =>
@@ -264,6 +266,16 @@ const ChoreTracker = () => {
     );
   };
 
+  const handleSaveDay = () => {
+    // Reset today's points after saving
+    setChores(prevChores =>
+      prevChores.map(chore => ({
+        ...chore,
+        todayPoints: 0,
+      }))
+    );
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="text-center mb-8">
@@ -288,14 +300,34 @@ const ChoreTracker = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <ChoreList chores={chores} onCompleteChore={completeChore} />
-        <RewardsList 
-          rewards={rewards} 
-          totalPoints={totalPoints} 
-          onPurchaseReward={purchaseReward} 
-        />
-      </div>
+      <Tabs defaultValue="chores" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="chores" className="text-lg font-medium">
+            🧹 Chores & Rewards
+          </TabsTrigger>
+          <TabsTrigger value="history" className="text-lg font-medium">
+            📅 Daily History
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="chores">
+          <div className="grid lg:grid-cols-2 gap-8">
+            <ChoreList chores={chores} onCompleteChore={completeChore} />
+            <RewardsList 
+              rewards={rewards} 
+              totalPoints={totalPoints} 
+              onPurchaseReward={purchaseReward} 
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="history">
+          <DailyTally 
+            currentDayPoints={todayPoints}
+            onSaveDay={handleSaveDay}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
