@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Calendar, Trophy, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,18 +32,20 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
     const today = new Date().toDateString();
     const existingRecordIndex = dailyRecords.findIndex(record => record.date === today);
     
-    const newRecord: DailyRecord = {
-      date: today,
-      totalPoints: currentDayPoints
-    };
-
     if (existingRecordIndex >= 0) {
-      // Update existing record
+      // Add to existing record instead of replacing
       const updatedRecords = [...dailyRecords];
-      updatedRecords[existingRecordIndex] = newRecord;
+      updatedRecords[existingRecordIndex] = {
+        ...updatedRecords[existingRecordIndex],
+        totalPoints: updatedRecords[existingRecordIndex].totalPoints + currentDayPoints
+      };
       setDailyRecords(updatedRecords);
     } else {
-      // Add new record
+      // Create new record
+      const newRecord: DailyRecord = {
+        date: today,
+        totalPoints: currentDayPoints
+      };
       setDailyRecords([newRecord, ...dailyRecords]);
     }
     
@@ -81,20 +82,25 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
         
         <div className="text-center">
           <div className="text-3xl font-bold text-purple-700 mb-2">
-            {currentDayPoints} diamonds earned today! 💎
+            {currentDayPoints} diamonds to save 💎
           </div>
           
           {todaysRecord && (
-            <div className="text-sm text-purple-600 mb-4">
-              Last saved: {todaysRecord.totalPoints} diamonds
+            <div className="text-lg text-green-600 mb-2 font-semibold">
+              Already saved today: {todaysRecord.totalPoints} diamonds
             </div>
           )}
           
+          <div className="text-sm text-purple-600 mb-4">
+            Total for today will be: {(todaysRecord?.totalPoints || 0) + currentDayPoints} diamonds
+          </div>
+          
           <Button
             onClick={saveTodaysPoints}
-            className="bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white rounded-full px-6 py-2 font-medium"
+            disabled={currentDayPoints === 0}
+            className="bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white rounded-full px-6 py-2 font-medium disabled:opacity-50"
           >
-            Save Today's Progress 💾
+            {currentDayPoints === 0 ? 'No points to save' : `Save ${currentDayPoints} diamonds 💾`}
           </Button>
         </div>
       </div>
