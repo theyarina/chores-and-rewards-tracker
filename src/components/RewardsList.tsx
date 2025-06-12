@@ -12,7 +12,7 @@ interface RewardsListProps {
 const RewardsList = ({ rewards, totalPoints, onPurchaseReward }: RewardsListProps) => {
   return (
     <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-purple-200">
-      <h2 className="text-2xl font-bold text-purple-600 mb-6 text-center flex items-center justify-center gap-2">
+      <h2 className="text-2xl font-bold text-purple-600 mb-6 text-center flex items-center justify-center gap-2 font-klop">
         <span>🎁</span>
         Rewards Shop
         <span>🎁</span>
