@@ -1,3 +1,4 @@
+
 import { Diamond } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Chore } from './ChoreTracker';
@@ -9,7 +10,7 @@ interface ChoreListProps {
 
 const ChoreList = ({ chores, onCompleteChore }: ChoreListProps) => {
   return (
-    <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-pink-200">
+    <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-pink-200 transform scale-150 origin-top-left">
       <h2 className="text-2xl font-bold text-pink-600 mb-6 text-center flex items-center justify-center gap-2 font-fredoka">
         <span>🧹</span>
         Daily Chores
