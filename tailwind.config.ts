@@ -20,7 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				'kalam': ['Kalam', 'cursive'],
-				'klop': ['Klop', 'sans-serif'],
+				'fredoka': ['Fredoka One', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
