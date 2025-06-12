@@ -59,7 +59,7 @@ const ChoreTracker = () => {
     {
       id: '5',
       name: 'Brush your hair',
-      emoji: '💇‍♀️',
+      emoji: '💇🏼‍♀️',
       dailyPoints: 1,
       todayPoints: 0,
       totalPoints: 0,
