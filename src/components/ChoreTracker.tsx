@@ -287,6 +287,9 @@ const ChoreTracker = () => {
   const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
   const totalSavedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
 
+  // Calculate total available points for rewards (current + saved)
+  const totalAvailablePoints = totalPoints + totalSavedPoints;
+
   const completeChore = (choreId: string) => {
     setChores(prevChores =>
       prevChores.map(chore =>
@@ -307,10 +310,11 @@ const ChoreTracker = () => {
 
   const purchaseReward = (rewardId: string) => {
     const reward = rewards.find(r => r.id === rewardId);
-    if (!reward || totalPoints < reward.cost) return;
+    if (!reward || totalAvailablePoints < reward.cost) return;
 
-    // Deduct points from chores (starting with highest totals)
     let pointsToDeduct = reward.cost;
+    
+    // First, try to deduct from current total points
     const updatedChores = [...chores]
       .sort((a, b) => b.totalPoints - a.totalPoints)
       .map(chore => {
@@ -324,6 +328,23 @@ const ChoreTracker = () => {
           totalPoints: chore.totalPoints - deduction,
         };
       });
+
+    // If we still need to deduct points, use saved points
+    if (pointsToDeduct > 0) {
+      const updatedDailyRecords = [...dailyRecords];
+      let remainingToDeduct = pointsToDeduct;
+      
+      // Deduct from most recent saved points first
+      for (let i = 0; i < updatedDailyRecords.length && remainingToDeduct > 0; i++) {
+        const deduction = Math.min(updatedDailyRecords[i].totalPoints, remainingToDeduct);
+        updatedDailyRecords[i].totalPoints -= deduction;
+        remainingToDeduct -= deduction;
+      }
+      
+      // Remove records with 0 points
+      const filteredRecords = updatedDailyRecords.filter(record => record.totalPoints > 0);
+      localStorage.setItem('tessaChoreTrackerDaily', JSON.stringify(filteredRecords));
+    }
 
     setChores(updatedChores);
     setRewards(prevRewards =>
@@ -393,7 +414,7 @@ const ChoreTracker = () => {
             />
             <RewardsList 
               rewards={rewards} 
-              totalPoints={totalPoints} 
+              totalPoints={totalAvailablePoints}
               onPurchaseReward={purchaseReward} 
             />
           </div>
