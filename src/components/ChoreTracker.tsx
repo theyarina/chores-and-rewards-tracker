@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Diamond, Brush } from 'lucide-react';
+import { Diamond } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ChoreList from './ChoreList';
 import RewardsList from './RewardsList';
@@ -376,7 +377,11 @@ const ChoreTracker = () => {
         </h1>
         
         <div className="flex justify-center mb-4">
-          <Brush className="w-12 h-12 text-pink-500" />
+          <img 
+            src="/lovable-uploads/fed41148-fcc3-4020-a57d-1ba1b5ee7891.png" 
+            alt="Tessa's Avatar" 
+            className="w-[70px] h-[70px]"
+          />
         </div>
         
         <p className="text-lg text-purple-600 mb-4">Complete chores to earn diamonds!</p>
