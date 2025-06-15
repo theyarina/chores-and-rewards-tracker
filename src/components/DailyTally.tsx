@@ -1,6 +1,11 @@
+
 import { useState, useEffect } from 'react';
-import { Calendar, Trophy, TrendingUp } from 'lucide-react';
+import { Calendar, Trophy, TrendingUp, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import PasswordVerification from './PasswordVerification';
 
 interface DailyRecord {
   date: string;
@@ -9,11 +14,16 @@ interface DailyRecord {
 
 interface DailyTallyProps {
   currentDayPoints: number;
+  totalSavedPoints: number;
   onSaveDay: () => void;
 }
 
-const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
+const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTallyProps) => {
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<DailyRecord | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   // Load daily records from localStorage on component mount
   useEffect(() => {
@@ -50,6 +60,32 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
     }
     
     onSaveDay();
+  };
+
+  const handleEditRecord = (record: DailyRecord) => {
+    setEditingRecord(record);
+    setEditValue(record.totalPoints.toString());
+    setShowPasswordDialog(true);
+  };
+
+  const handlePasswordSuccess = () => {
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingRecord) {
+      const newPoints = parseInt(editValue) || 0;
+      setDailyRecords(prev => 
+        prev.map(record => 
+          record.date === editingRecord.date 
+            ? { ...record, totalPoints: Math.max(0, newPoints) }
+            : record
+        )
+      );
+      setShowEditDialog(false);
+      setEditingRecord(null);
+      setEditValue('');
+    }
   };
 
   const getBestDays = () => {
@@ -94,6 +130,10 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
           <div className="text-sm text-purple-600 mb-4">
             Total for today will be: {(todaysRecord?.totalPoints || 0) + currentDayPoints} diamonds
           </div>
+
+          <div className="text-lg text-orange-600 mb-4 font-semibold">
+            💰 Saved diamonds: {totalSavedPoints}
+          </div>
           
           <Button
             onClick={saveTodaysPoints}
@@ -131,8 +171,18 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
                     {formatDate(record.date)}
                   </span>
                 </div>
-                <div className="text-lg font-bold text-purple-700">
-                  {record.totalPoints} 💎
+                <div className="flex items-center gap-2">
+                  <div className="text-lg font-bold text-purple-700">
+                    {record.totalPoints} 💎
+                  </div>
+                  <Button
+                    onClick={() => handleEditRecord(record)}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -157,14 +207,77 @@ const DailyTally = ({ currentDayPoints, onSaveDay }: DailyTallyProps) => {
                 <span className="font-medium text-purple-700">
                   {formatDate(record.date)}
                 </span>
-                <span className="text-lg font-bold text-purple-700">
-                  {record.totalPoints} 💎
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-purple-700">
+                    {record.totalPoints} 💎
+                  </span>
+                  <Button
+                    onClick={() => handleEditRecord(record)}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      <PasswordVerification
+        isOpen={showPasswordDialog}
+        onClose={() => {
+          setShowPasswordDialog(false);
+          setEditingRecord(null);
+          setEditValue('');
+        }}
+        onSuccess={handlePasswordSuccess}
+        title="Edit Daily Points"
+      />
+
+      <Dialog open={showEditDialog} onOpenChange={() => setShowEditDialog(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-purple-700">
+              Edit Points for {editingRecord && formatDate(editingRecord.date)}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="points" className="text-sm font-medium text-purple-600">
+                Total Points
+              </Label>
+              <Input
+                id="points"
+                type="number"
+                min="0"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="text-center text-lg"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowEditDialog(false)} 
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveEdit} 
+                className="flex-1 bg-purple-500 hover:bg-purple-600"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

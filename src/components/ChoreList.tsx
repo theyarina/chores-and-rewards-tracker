@@ -1,20 +1,46 @@
-import { Diamond } from 'lucide-react';
+
+import { useState } from 'react';
+import { Diamond, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Chore } from './ChoreTracker';
+import PasswordVerification from './PasswordVerification';
+import EditChorePoints from './EditChorePoints';
 
 interface ChoreListProps {
   chores: Chore[];
   onCompleteChore: (choreId: string) => void;
+  onEditChores: (updatedChores: Chore[]) => void;
 }
 
-const ChoreList = ({ chores, onCompleteChore }: ChoreListProps) => {
+const ChoreList = ({ chores, onCompleteChore, onEditChores }: ChoreListProps) => {
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const handleEditClick = () => {
+    setShowPasswordDialog(true);
+  };
+
+  const handlePasswordSuccess = () => {
+    setShowEditDialog(true);
+  };
+
   return (
     <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-pink-200">
-      <h2 className="text-2xl font-bold text-pink-600 mb-6 text-center flex items-center justify-center gap-2 font-fredoka">
-        <span>🧹</span>
-        Daily Chores
-        <span>🧹</span>
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-pink-600 text-center flex items-center justify-center gap-2 font-fredoka flex-1">
+          <span>🧹</span>
+          Daily Chores
+          <span>🧹</span>
+        </h2>
+        <Button
+          onClick={handleEditClick}
+          variant="outline"
+          size="sm"
+          className="bg-white/80 hover:bg-white border-pink-300 text-pink-600 hover:text-pink-700"
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+      </div>
       
       <div className="space-y-4">
         {chores.map((chore) => (
@@ -62,6 +88,20 @@ const ChoreList = ({ chores, onCompleteChore }: ChoreListProps) => {
           </div>
         ))}
       </div>
+
+      <PasswordVerification
+        isOpen={showPasswordDialog}
+        onClose={() => setShowPasswordDialog(false)}
+        onSuccess={handlePasswordSuccess}
+        title="Edit Chore Points"
+      />
+
+      <EditChorePoints
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        chores={chores}
+        onSave={onEditChores}
+      />
     </div>
   );
 };

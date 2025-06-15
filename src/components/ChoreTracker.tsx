@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Diamond, Brush } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ChoreList from './ChoreList';
@@ -20,6 +20,11 @@ export interface Reward {
   emoji: string;
   cost: number;
   purchased: number;
+}
+
+interface DailyRecord {
+  date: string;
+  totalPoints: number;
 }
 
 const ChoreTracker = () => {
@@ -219,8 +224,68 @@ const ChoreTracker = () => {
     },
   ]);
 
+  const [lastAutoSave, setLastAutoSave] = useState<string>('');
+
+  // Auto-save at midnight
+  useEffect(() => {
+    const checkMidnight = () => {
+      const now = new Date();
+      const today = now.toDateString();
+      
+      // Check if it's a new day and we have points to save
+      if (lastAutoSave !== today) {
+        const todayPoints = chores.reduce((sum, chore) => sum + chore.todayPoints, 0);
+        
+        if (todayPoints > 0) {
+          // Auto-save today's points
+          const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
+          const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
+          
+          const existingRecordIndex = dailyRecords.findIndex(record => record.date === today);
+          
+          if (existingRecordIndex >= 0) {
+            dailyRecords[existingRecordIndex].totalPoints += todayPoints;
+          } else {
+            dailyRecords.unshift({
+              date: today,
+              totalPoints: todayPoints
+            });
+          }
+          
+          localStorage.setItem('tessaChoreTrackerDaily', JSON.stringify(dailyRecords));
+          
+          // Reset today's points after auto-save
+          setChores(prevChores =>
+            prevChores.map(chore => ({
+              ...chore,
+              todayPoints: 0,
+            }))
+          );
+        }
+        
+        setLastAutoSave(today);
+      }
+    };
+
+    // Check immediately and then every minute
+    checkMidnight();
+    const interval = setInterval(checkMidnight, 60000);
+    
+    return () => clearInterval(interval);
+  }, [chores, lastAutoSave]);
+
+  // Initialize lastAutoSave on component mount
+  useEffect(() => {
+    setLastAutoSave(new Date().toDateString());
+  }, []);
+
   const totalPoints = chores.reduce((sum, chore) => sum + chore.totalPoints, 0);
   const todayPoints = chores.reduce((sum, chore) => sum + chore.todayPoints, 0);
+  
+  // Calculate saved points (points that have been earned but not redeemed)
+  const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
+  const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
+  const totalSavedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
 
   const completeChore = (choreId: string) => {
     setChores(prevChores =>
@@ -234,6 +299,10 @@ const ChoreTracker = () => {
           : chore
       )
     );
+  };
+
+  const handleEditChores = (updatedChores: Chore[]) => {
+    setChores(updatedChores);
   };
 
   const purchaseReward = (rewardId: string) => {
@@ -281,7 +350,7 @@ const ChoreTracker = () => {
       <div className="text-center mb-8">
         <h1 className="text-5xl font-bold text-pink-600 mb-2 flex items-center justify-center gap-2 font-kalam">
           <span>✨</span>
-          Tessa's Chore Tracker
+          Tessa's Chore Tracker v2.0
           <span>✨</span>
         </h1>
         
@@ -292,10 +361,15 @@ const ChoreTracker = () => {
         <p className="text-lg text-purple-600 mb-4">Complete chores to earn diamonds!</p>
         
         <div className="bg-white/70 rounded-3xl p-6 shadow-lg backdrop-blur-sm border-2 border-pink-200 inline-block">
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-purple-700">
+          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-purple-700 mb-2">
             <Diamond className="w-8 h-8 text-blue-500 fill-blue-200" />
             <span>{totalPoints}</span>
             <span className="text-lg font-medium">Total Diamonds</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-lg font-semibold text-orange-600">
+            <span>💰</span>
+            <span>{totalSavedPoints}</span>
+            <span className="text-sm font-medium">Saved Diamonds</span>
           </div>
         </div>
       </div>
@@ -312,7 +386,11 @@ const ChoreTracker = () => {
         
         <TabsContent value="chores">
           <div className="grid lg:grid-cols-2 gap-8">
-            <ChoreList chores={chores} onCompleteChore={completeChore} />
+            <ChoreList 
+              chores={chores} 
+              onCompleteChore={completeChore}
+              onEditChores={handleEditChores}
+            />
             <RewardsList 
               rewards={rewards} 
               totalPoints={totalPoints} 
@@ -324,6 +402,7 @@ const ChoreTracker = () => {
         <TabsContent value="history">
           <DailyTally 
             currentDayPoints={todayPoints}
+            totalSavedPoints={totalSavedPoints}
             onSaveDay={handleSaveDay}
           />
         </TabsContent>
