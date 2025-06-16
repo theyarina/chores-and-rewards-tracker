@@ -82,54 +82,36 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
 
   const handleSaveEdit = () => {
     if (editingSavedPoints) {
-      // Edit total saved points by adjusting the most recent records
+      // Edit total saved points by setting the total directly
       const newTotal = parseInt(savedPointsEditValue) || 0;
-      const difference = newTotal - totalSavedPoints;
       
-      if (difference !== 0) {
-        const updatedRecords = [...dailyRecords];
-        
-        if (difference > 0) {
-          // Add points to the most recent record, or create a new one
-          if (updatedRecords.length > 0) {
-            updatedRecords[0].totalPoints += difference;
-          } else {
-            const today = new Date().toDateString();
-            updatedRecords.unshift({
-              date: today,
-              totalPoints: difference
-            });
-          }
-        } else {
-          // Remove points from records (starting with most recent)
-          let pointsToRemove = Math.abs(difference);
-          
-          for (let i = 0; i < updatedRecords.length && pointsToRemove > 0; i++) {
-            const deduction = Math.min(updatedRecords[i].totalPoints, pointsToRemove);
-            updatedRecords[i].totalPoints -= deduction;
-            pointsToRemove -= deduction;
-          }
-          
-          // Remove records with 0 points
-          const filteredRecords = updatedRecords.filter(record => record.totalPoints > 0);
-          setDailyRecords(filteredRecords);
-          setShowEditDialog(false);
-          setEditingSavedPoints(false);
-          setSavedPointsEditValue('');
-          return;
-        }
-        
-        setDailyRecords(updatedRecords);
+      // Clear all existing records and create a single record with the new total
+      if (newTotal > 0) {
+        const today = new Date().toDateString();
+        const newRecord: DailyRecord = {
+          date: today,
+          totalPoints: newTotal
+        };
+        setDailyRecords([newRecord]);
+      } else {
+        // If setting to 0, clear all records
+        setDailyRecords([]);
       }
     } else if (editingRecord) {
       const newPoints = parseInt(editValue) || 0;
-      setDailyRecords(prev => 
-        prev.map(record => 
-          record.date === editingRecord.date 
-            ? { ...record, totalPoints: Math.max(0, newPoints) }
-            : record
-        )
-      );
+      if (newPoints <= 0) {
+        // Remove the record if points are 0 or less
+        setDailyRecords(prev => prev.filter(record => record.date !== editingRecord.date));
+      } else {
+        // Update the record with new points
+        setDailyRecords(prev => 
+          prev.map(record => 
+            record.date === editingRecord.date 
+              ? { ...record, totalPoints: newPoints }
+              : record
+          )
+        );
+      }
     }
     
     setShowEditDialog(false);
