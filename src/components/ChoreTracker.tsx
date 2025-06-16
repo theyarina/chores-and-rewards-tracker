@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Diamond } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -226,6 +225,32 @@ const ChoreTracker = () => {
   ]);
 
   const [lastAutoSave, setLastAutoSave] = useState<string>('');
+  const [totalSavedPoints, setTotalSavedPoints] = useState<number>(0);
+
+  // Load saved points from localStorage on component mount
+  useEffect(() => {
+    const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
+    const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
+    const savedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+    setTotalSavedPoints(savedPoints);
+  }, []);
+
+  // Listen for localStorage changes to update saved points
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
+      const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
+      const savedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+      setTotalSavedPoints(savedPoints);
+    };
+
+    // Listen for custom event dispatched from DailyTally
+    window.addEventListener('dailyRecordsUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('dailyRecordsUpdated', handleStorageChange);
+    };
+  }, []);
 
   // Auto-save at midnight
   useEffect(() => {
@@ -283,11 +308,6 @@ const ChoreTracker = () => {
   const totalPoints = chores.reduce((sum, chore) => sum + chore.totalPoints, 0);
   const todayPoints = chores.reduce((sum, chore) => sum + chore.todayPoints, 0);
   
-  // Calculate saved points (points that have been earned but not redeemed)
-  const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
-  const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
-  const totalSavedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
-
   // Calculate total available points for rewards (current + saved)
   const totalAvailablePoints = totalPoints + totalSavedPoints;
 
@@ -367,6 +387,10 @@ const ChoreTracker = () => {
     );
   };
 
+  const handleSavedPointsChange = (newSavedPoints: number) => {
+    setTotalSavedPoints(newSavedPoints);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="text-center mb-8">
@@ -430,6 +454,7 @@ const ChoreTracker = () => {
             currentDayPoints={todayPoints}
             totalSavedPoints={totalSavedPoints}
             onSaveDay={handleSaveDay}
+            onSavedPointsChange={handleSavedPointsChange}
           />
         </TabsContent>
       </Tabs>

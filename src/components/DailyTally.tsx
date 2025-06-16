@@ -15,9 +15,10 @@ interface DailyTallyProps {
   currentDayPoints: number;
   totalSavedPoints: number;
   onSaveDay: () => void;
+  onSavedPointsChange: (newSavedPoints: number) => void;
 }
 
-const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTallyProps) => {
+const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay, onSavedPointsChange }: DailyTallyProps) => {
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -37,7 +38,14 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
   // Save daily records to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('tessaChoreTrackerDaily', JSON.stringify(dailyRecords));
-  }, [dailyRecords]);
+    
+    // Calculate new saved points total and notify parent
+    const newSavedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+    onSavedPointsChange(newSavedPoints);
+    
+    // Dispatch custom event for other components that might be listening
+    window.dispatchEvent(new CustomEvent('dailyRecordsUpdated'));
+  }, [dailyRecords, onSavedPointsChange]);
 
   const saveTodaysPoints = () => {
     const today = new Date().toDateString();
