@@ -352,6 +352,8 @@ const ChoreTracker = () => {
 
     // If we still need to deduct points, use saved points
     if (pointsToDeduct > 0) {
+      const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
+      const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
       const updatedDailyRecords = [...dailyRecords];
       let remainingToDeduct = pointsToDeduct;
       
@@ -365,6 +367,13 @@ const ChoreTracker = () => {
       // Remove records with 0 points
       const filteredRecords = updatedDailyRecords.filter(record => record.totalPoints > 0);
       localStorage.setItem('tessaChoreTrackerDaily', JSON.stringify(filteredRecords));
+      
+      // Update saved points state
+      const newSavedPoints = filteredRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+      setTotalSavedPoints(newSavedPoints);
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('dailyRecordsUpdated'));
     }
 
     setChores(updatedChores);
