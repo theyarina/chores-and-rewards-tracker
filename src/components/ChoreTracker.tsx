@@ -232,15 +232,18 @@ const ChoreTracker = () => {
     const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
     const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
     const savedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+    console.log('ChoreTracker: Initial load of saved points:', savedPoints);
     setTotalSavedPoints(savedPoints);
   }, []);
 
   // Listen for localStorage changes to update saved points
   useEffect(() => {
     const handleStorageChange = () => {
+      console.log('ChoreTracker: Received dailyRecordsUpdated event');
       const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
       const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
       const savedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+      console.log('ChoreTracker: Updated saved points to:', savedPoints);
       setTotalSavedPoints(savedPoints);
     };
 
@@ -330,6 +333,7 @@ const ChoreTracker = () => {
   };
 
   const purchaseReward = (rewardId: string) => {
+    console.log('ChoreTracker: Attempting to purchase reward with total available points:', totalAvailablePoints);
     const reward = rewards.find(r => r.id === rewardId);
     if (!reward || totalAvailablePoints < reward.cost) return;
 
@@ -352,6 +356,7 @@ const ChoreTracker = () => {
 
     // If we still need to deduct points, use saved points
     if (pointsToDeduct > 0) {
+      console.log('ChoreTracker: Need to deduct', pointsToDeduct, 'from saved points');
       const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
       const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
       const updatedDailyRecords = [...dailyRecords];
@@ -370,6 +375,7 @@ const ChoreTracker = () => {
       
       // Update saved points state
       const newSavedPoints = filteredRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+      console.log('ChoreTracker: Updated saved points after purchase to:', newSavedPoints);
       setTotalSavedPoints(newSavedPoints);
       
       // Dispatch event to notify other components
@@ -397,6 +403,7 @@ const ChoreTracker = () => {
   };
 
   const handleSavedPointsChange = (newSavedPoints: number) => {
+    console.log('ChoreTracker: handleSavedPointsChange called with:', newSavedPoints);
     setTotalSavedPoints(newSavedPoints);
   };
 

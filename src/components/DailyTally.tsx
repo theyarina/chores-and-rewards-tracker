@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Calendar, Trophy, TrendingUp, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,7 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay, onSavedPoin
   };
 
   const handleEditSavedPoints = () => {
+    console.log('Starting to edit saved points, current total:', totalSavedPoints);
     setEditingSavedPoints(true);
     setSavedPointsEditValue(totalSavedPoints.toString());
     setShowPasswordDialog(true);
@@ -90,8 +92,12 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay, onSavedPoin
 
   const handleSaveEdit = () => {
     if (editingSavedPoints) {
+      console.log('Saving edited saved points from:', totalSavedPoints, 'to:', savedPointsEditValue);
+      
       // Edit total saved points by setting the total directly
       const newTotal = parseInt(savedPointsEditValue) || 0;
+      
+      console.log('New total parsed as:', newTotal);
       
       // Clear all existing records and create a single record with the new total
       if (newTotal > 0) {
@@ -100,9 +106,11 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay, onSavedPoin
           date: today,
           totalPoints: newTotal
         };
+        console.log('Creating new record:', newRecord);
         setDailyRecords([newRecord]);
       } else {
         // If setting to 0, clear all records
+        console.log('Setting to 0, clearing all records');
         setDailyRecords([]);
       }
     } else if (editingRecord) {
