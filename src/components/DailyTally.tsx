@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Calendar, Trophy, TrendingUp, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,8 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DailyRecord | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [editingSavedPoints, setEditingSavedPoints] = useState(false);
+  const [savedPointsEditValue, setSavedPointsEditValue] = useState('');
 
   // Load daily records from localStorage on component mount
   useEffect(() => {
@@ -65,6 +66,13 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
   const handleEditRecord = (record: DailyRecord) => {
     setEditingRecord(record);
     setEditValue(record.totalPoints.toString());
+    setEditingSavedPoints(false);
+    setShowPasswordDialog(true);
+  };
+
+  const handleEditSavedPoints = () => {
+    setEditingSavedPoints(true);
+    setSavedPointsEditValue(totalSavedPoints.toString());
     setShowPasswordDialog(true);
   };
 
@@ -73,7 +81,47 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
   };
 
   const handleSaveEdit = () => {
-    if (editingRecord) {
+    if (editingSavedPoints) {
+      // Edit total saved points by adjusting the most recent records
+      const newTotal = parseInt(savedPointsEditValue) || 0;
+      const difference = newTotal - totalSavedPoints;
+      
+      if (difference !== 0) {
+        const updatedRecords = [...dailyRecords];
+        
+        if (difference > 0) {
+          // Add points to the most recent record, or create a new one
+          if (updatedRecords.length > 0) {
+            updatedRecords[0].totalPoints += difference;
+          } else {
+            const today = new Date().toDateString();
+            updatedRecords.unshift({
+              date: today,
+              totalPoints: difference
+            });
+          }
+        } else {
+          // Remove points from records (starting with most recent)
+          let pointsToRemove = Math.abs(difference);
+          
+          for (let i = 0; i < updatedRecords.length && pointsToRemove > 0; i++) {
+            const deduction = Math.min(updatedRecords[i].totalPoints, pointsToRemove);
+            updatedRecords[i].totalPoints -= deduction;
+            pointsToRemove -= deduction;
+          }
+          
+          // Remove records with 0 points
+          const filteredRecords = updatedRecords.filter(record => record.totalPoints > 0);
+          setDailyRecords(filteredRecords);
+          setShowEditDialog(false);
+          setEditingSavedPoints(false);
+          setSavedPointsEditValue('');
+          return;
+        }
+        
+        setDailyRecords(updatedRecords);
+      }
+    } else if (editingRecord) {
       const newPoints = parseInt(editValue) || 0;
       setDailyRecords(prev => 
         prev.map(record => 
@@ -82,10 +130,13 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
             : record
         )
       );
-      setShowEditDialog(false);
-      setEditingRecord(null);
-      setEditValue('');
     }
+    
+    setShowEditDialog(false);
+    setEditingRecord(null);
+    setEditValue('');
+    setEditingSavedPoints(false);
+    setSavedPointsEditValue('');
   };
 
   const getBestDays = () => {
@@ -131,8 +182,16 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
             Total for today will be: {(todaysRecord?.totalPoints || 0) + currentDayPoints} diamonds
           </div>
 
-          <div className="text-lg text-orange-600 mb-4 font-semibold">
-            💰 Saved diamonds: {totalSavedPoints}
+          <div className="flex items-center justify-center gap-2 text-lg text-orange-600 mb-4 font-semibold">
+            <span>💰 Saved diamonds: {totalSavedPoints}</span>
+            <Button
+              onClick={handleEditSavedPoints}
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="w-3 h-3" />
+            </Button>
           </div>
           
           <Button
@@ -232,29 +291,37 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay }: DailyTall
           setShowPasswordDialog(false);
           setEditingRecord(null);
           setEditValue('');
+          setEditingSavedPoints(false);
+          setSavedPointsEditValue('');
         }}
         onSuccess={handlePasswordSuccess}
-        title="Edit Daily Points"
+        title={editingSavedPoints ? "Edit Saved Diamonds" : "Edit Daily Points"}
       />
 
       <Dialog open={showEditDialog} onOpenChange={() => setShowEditDialog(false)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center text-purple-700">
-              Edit Points for {editingRecord && formatDate(editingRecord.date)}
+              {editingSavedPoints 
+                ? "Edit Total Saved Diamonds" 
+                : `Edit Points for ${editingRecord && formatDate(editingRecord.date)}`
+              }
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="points" className="text-sm font-medium text-purple-600">
-                Total Points
+                {editingSavedPoints ? "Total Saved Diamonds" : "Total Points"}
               </Label>
               <Input
                 id="points"
                 type="number"
                 min="0"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
+                value={editingSavedPoints ? savedPointsEditValue : editValue}
+                onChange={(e) => editingSavedPoints 
+                  ? setSavedPointsEditValue(e.target.value) 
+                  : setEditValue(e.target.value)
+                }
                 className="text-center text-lg"
                 autoFocus
               />
