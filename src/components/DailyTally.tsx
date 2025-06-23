@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Calendar, Trophy, TrendingUp, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,10 +41,8 @@ const DailyTally = ({ currentDayPoints, totalSavedPoints, onSaveDay, onSavedPoin
     
     // Calculate new saved points total and notify parent
     const newSavedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
+    console.log('DailyTally: Calculated new saved points:', newSavedPoints);
     onSavedPointsChange(newSavedPoints);
-    
-    // Dispatch custom event for other components that might be listening
-    window.dispatchEvent(new CustomEvent('dailyRecordsUpdated'));
   }, [dailyRecords, onSavedPointsChange]);
 
   const saveTodaysPoints = () => {

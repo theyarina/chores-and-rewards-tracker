@@ -236,25 +236,6 @@ const ChoreTracker = () => {
     setTotalSavedPoints(savedPoints);
   }, []);
 
-  // Listen for localStorage changes to update saved points
-  useEffect(() => {
-    const handleStorageChange = () => {
-      console.log('ChoreTracker: Received dailyRecordsUpdated event');
-      const savedRecords = localStorage.getItem('tessaChoreTrackerDaily');
-      const dailyRecords: DailyRecord[] = savedRecords ? JSON.parse(savedRecords) : [];
-      const savedPoints = dailyRecords.reduce((sum, record) => sum + record.totalPoints, 0);
-      console.log('ChoreTracker: Updated saved points to:', savedPoints);
-      setTotalSavedPoints(savedPoints);
-    };
-
-    // Listen for custom event dispatched from DailyTally
-    window.addEventListener('dailyRecordsUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('dailyRecordsUpdated', handleStorageChange);
-    };
-  }, []);
-
   // Auto-save at midnight
   useEffect(() => {
     const checkMidnight = () => {
@@ -377,9 +358,6 @@ const ChoreTracker = () => {
       const newSavedPoints = filteredRecords.reduce((sum, record) => sum + record.totalPoints, 0);
       console.log('ChoreTracker: Updated saved points after purchase to:', newSavedPoints);
       setTotalSavedPoints(newSavedPoints);
-      
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('dailyRecordsUpdated'));
     }
 
     setChores(updatedChores);
